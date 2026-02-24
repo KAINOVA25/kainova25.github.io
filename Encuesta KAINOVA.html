@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProyectoForm — Validación de Proyectos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f7;--white:#ffffff;--ink:#0f1729;--ink2:#3a4055;--ink3:#8a8fa8;
+  --accent:#1a4fd6;--accent-light:#e8edfb;--accent2:#0ea5e9;
+  --green:#16a34a;--green-light:#dcfce7;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --red:#dc2626;--red-light:#fee2e2;
+  --border:#dde1ed;--shadow:0 2px 12px rgba(15,23,41,0.08);--shadow-lg:0 8px 32px rgba(15,23,41,0.14);--radius:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(0,0,0,0.3)}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.brand-icon{background:var(--accent);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.brand-text{font-family:'Fraunces',serif;font-size:1.25rem;font-weight:700;letter-spacing:-0.02em}
+.brand-text em{color:var(--accent2);font-style:italic}
+.brand-tag{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-left:2px}
+.mode-tabs{display:flex;gap:3px}
+.mode-tab{padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;transition:all .2s;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5)}
+.mode-tab.active{background:var(--accent);color:#fff}
+.panel{display:none;flex:1;padding:28px 20px;max-width:900px;margin:0 auto;width:100%}
+.panel.active{display:block}
+.compare-banner{background:var(--ink);border-radius:var(--radius);margin-bottom:28px;overflow:hidden;box-shadow:var(--shadow-lg)}
+.compare-banner-title{padding:14px 20px;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.compare-col{padding:20px}
+.compare-col.wa{border-right:1px solid rgba(255,255,255,0.08)}
+.compare-col-head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.compare-col-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.compare-col-icon.wa-icon{background:#25D366}
+.compare-col-icon.pf-icon{background:var(--accent)}
+.compare-col-name{font-size:13px;font-weight:800;color:#fff}
+.compare-col-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px}
+.compare-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.6)}
+.compare-item .ci{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;margin-top:1px}
+.ci.yes{background:var(--green);color:#fff}
+.ci.no{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.3)}
+.ci.pro{background:var(--accent);color:#fff}
+@media(max-width:600px){.compare-grid{grid-template-columns:1fr}.compare-col.wa{border-right:none;border-bottom:1px solid rgba(255,255,255,0.08)}}
+.section-label{font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;margin-top:28px;display:flex;align-items:center;gap:8px}
+.section-label:first-child{margin-top:0}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-lg)}
+input[type=text],input[type=email],input[type=tel],input[type=number],textarea,select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;color:var(--ink);background:#fafbff;transition:border-color .2s,box-shadow .2s;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);background:#fff}
+textarea{resize:vertical;min-height:80px}
+label{display:block;font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:5px;letter-spacing:0.03em}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.field-row{grid-template-columns:1fr}}
+.help-text{font-size:11px;color:var(--ink3);margin-top:4px;line-height:1.4}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border:none;border-radius:var(--radius);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.01em;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#1340b0;transform:translateY(-1px);box-shadow:0 4px 16px rgba(26,79,214,0.3)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--ink2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-green{background:#25D366;color:#fff}
+.btn-green:hover{background:#1da851;transform:translateY(-1px)}
+.btn-danger{background:transparent;border:1.5px solid #f0d8d8;color:#c0504a;font-size:12px;padding:6px 12px}
+.btn-danger:hover{background:#fff0ee;border-color:#c0504a}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:50%}
+.validity-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.validity-btn{padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.validity-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.count-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.count-btn{padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.count-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.img-upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbff;position:relative}
+.img-upload-area:hover{border-color:var(--accent);background:var(--accent-light)}
+.img-upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.img-thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.img-thumb{position:relative;width:72px;height:72px;border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.survey-header{background:linear-gradient(135deg,var(--ink) 0%,#1a2540 100%);color:#fff;padding:28px 24px 22px;border-radius:var(--radius) var(--radius) 0 0}
+.survey-header h2{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;margin-bottom:6px}
+.survey-header p{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.5}
+.survey-sender-bar{background:var(--accent);color:#fff;padding:10px 24px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:20px;border-radius:0 0 var(--radius) var(--radius)}
+.prog-wrap{background:var(--border);height:5px;border-radius:3px;margin-bottom:24px}
+.prog-fill{height:5px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .4s}
+.fill-q{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.fill-q-label{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+.fill-q-num{background:var(--ink);color:#fff;width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.fill-option{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:6px;border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s;user-select:none}
+.fill-option:hover{border-color:var(--accent);background:var(--accent-light)}
+.fill-option.selected{border-color:var(--accent);background:var(--accent-light)}
+.fill-option input{display:none}
+.fill-bullet{width:18px;height:18px;border:2px solid var(--border);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.fill-bullet.check{border-radius:4px}
+.fill-option.selected .fill-bullet{background:var(--accent);border-color:var(--accent)}
+.fill-option.selected .fill-bullet::after{content:'✓';color:#fff;font-size:10px;font-weight:800}
+.fill-select{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:13px;background:#fafbff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8fa8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center;-webkit-appearance:none;cursor:pointer}
+.fill-select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-light)}
+.scale-row{display:flex;gap:6px;flex-wrap:wrap}
+.scale-opt{flex:1;min-width:52px;border:1.5px solid var(--border);border-radius:var(--radius);padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s}
+.scale-opt:hover,.scale-opt.sel{border-color:var(--accent);background:var(--accent-light)}
+.scale-opt strong{display:block;font-size:16px;margin-bottom:2px}
+.scale-opt span{font-size:9px;color:var(--ink3)}
+.acc{border:1.5px solid var(--border);border-radius:var(--radius);margin-top:10px;overflow:hidden}
+.acc-h{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:#fafbff;font-size:12px;font-weight:700;user-select:none}
+.acc-h:hover{background:var(--accent-light)}
+.acc-body{display:none;padding:14px;font-size:13px;color:var(--ink2);line-height:1.6;border-top:1px solid var(--border);background:#fff}
+.acc-body.open{display:block}
+.img-gallery{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.img-gallery img{width:100%;max-width:280px;border-radius:4px;border:1px solid var(--border);cursor:pointer}
+.expired-banner{background:var(--amber-light);border:1.5px solid var(--amber);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
+.expired-icon{font-size:24px;flex-shrink:0}
+.expired-text strong{color:var(--amber);display:block;margin-bottom:2px}
+.expired-text p{font-size:12px;color:#7a5000}
+.comment-box{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:20px;box-shadow:var(--shadow)}
+.wa-result-box{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg)}
+.wa-step{padding:18px 20px;border-bottom:1px solid var(--border)}
+.wa-step:last-child{border-bottom:none}
+.wa-step-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.wa-step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;color:#fff}
+.wa-step-title{font-size:13px;font-weight:800}
+.wa-step-desc{font-size:11px;color:var(--ink3);margin-bottom:12px;margin-left:36px;line-height:1.5}
+.wa-step-actions{display:flex;gap:8px;flex-wrap:wrap;margin-left:36px}
+.success-screen{display:none;text-align:center;padding:40px 20px;background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow)}
+.success-screen .ico{font-size:56px;margin-bottom:16px}
+.success-screen h2{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:700;margin-bottom:8px}
+.success-screen p{color:var(--ink3);font-size:13px;margin-bottom:6px}
+.send-block{border-radius:8px;padding:18px 20px;margin-bottom:12px;text-align:left}
+.send-block.wa-block{background:#f0faf4;border:1.5px solid #b0d8be}
+.send-block.mail-block{background:#eef4ff;border:1.5px solid #b0c4e8}
+.send-block h4{font-size:13px;font-weight:800;margin-bottom:5px}
+.send-block p{font-size:11px;margin-bottom:12px;line-height:1.5}
+.send-full-btn{width:100%;justify-content:center;font-size:14px;padding:13px}
+.validity-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.05em}
+.validity-badge.ok{background:var(--green-light);color:var(--green)}
+.validity-badge.expired{background:var(--red-light);color:var(--red)}
+.validity-badge.permanent{background:var(--accent-light);color:var(--accent)}
+.pill{display:inline-block;background:var(--accent-light);color:var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700}
+.scroll-hint{font-size:11px;color:var(--ink3);text-align:center;padding:8px}
+.sender-preview{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.sender-avatar{width:50px;height:50px;border-radius:12px;background:var(--accent);color:#fff;font-family:'Fraunces',serif;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sender-name-big{font-size:16px;font-weight:800}
+.sender-sub{font-size:12px;color:var(--ink3)}
+.q-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .2s}
+.q-card:hover{box-shadow:var(--shadow-lg)}
+.q-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fafbff;border-bottom:1px solid var(--border)}
+.q-num{background:var(--accent);color:#fff;width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.q-type-badge{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:var(--accent-light);color:var(--accent)}
+.q-body{padding:16px}
+.q-actions{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
+.option-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.option-bullet{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0}
+.option-bullet.check{border-radius:3px}
+.option-input{flex:1}
+.add-option-btn{background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:5px;font-family:inherit}
+.type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px;margin-bottom:14px}
+.type-opt{border:1.5px solid var(--border);border-radius:var(--radius);padding:10px;cursor:pointer;text-align:center;transition:all .2s;background:var(--white)}
+.type-opt:hover{border-color:var(--accent);background:var(--accent-light)}
+.type-opt.selected{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.type-opt .icon{font-size:20px;margin-bottom:3px}
+.type-opt .lbl{font-size:10px;font-weight:700;letter-spacing:.03em}
+.pwd-screen{display:flex;align-items:center;justify-content:center;min-height:80vh;padding:20px}
+.pwd-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:36px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(15,23,41,.12)}
+.pwd-input{width:100%;padding:13px 16px;border:2px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;text-align:center;letter-spacing:2px;margin-bottom:10px;transition:border-color .2s;outline:none}
+.pwd-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+.pwd-error{color:#dc2626;font-size:12px;font-weight:700;margin-bottom:12px;display:none}
+/* URL BOX */
+.url-box{background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:2px solid #25D366;border-radius:12px;padding:24px;margin-top:16px}
+.url-display{background:#fff;border:1.5px solid #86efac;border-radius:8px;padding:14px 16px;font-family:monospace;font-size:13px;color:var(--ink);word-break:break-all;margin:12px 0;cursor:pointer;transition:background .15s}
+.url-display:hover{background:#f0fdf4}
+.url-copy-btn{background:#25D366;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .2s}
+.url-copy-btn:hover{background:#1da851}
+.url-copy-btn.copied{background:#16a34a}
+/* LOADING OVERLAY */
+.loading-overlay{position:fixed;inset:0;background:rgba(15,23,41,0.7);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.loading-box{background:#fff;border-radius:16px;padding:40px;text-align:center;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.spinner{width:48px;height:48px;border:4px solid var(--accent-light);border-top:4px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media print{.topbar,.no-print{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">📋</div>
+    <div>
+      <div class="brand-text">Proyecto<em>Form</em></div>
+      <div class="brand-tag">Validación de Proyectos</div>
+    </div>
+  </div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('creator')">✏️ Crear</button>
+    <button class="mode-tab" onclick="switchMode('preview')">👁 Vista Previa</button>
+    <button class="mode-tab" id="fillTab" style="display:none" onclick="switchMode('fill')">📋 Probar</button>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">Publicando formulario...</div>
+    <div style="font-size:13px;color:var(--ink3)">Generando enlace único para compartir</div>
+  </div>
+</div>
+
+<!-- PANEL: CREATOR -->
+<div class="panel active" id="panel-creator">
+
+  <div class="compare-banner">
+    <div class="compare-banner-title">🔗 Nuevo: Formulario como URL — Sin descargar archivos</div>
+    <div class="compare-grid">
+      <div class="compare-col wa">
+        <div class="compare-col-head">
+          <div class="compare-col-icon wa-icon">📁</div>
+          <div><div class="compare-col-name">Antes: Archivo HTML</div><div class="compare-col-sub">El destinatario debía descargarlo</div></div>
+        </div>
+        <div class="compare-item"><div class="ci no">✕</div>Hay que descargar el archivo</div>
+        <div class="compare-item"><div class="ci no">✕</div>No funciona en todos los dispositivos</div>
+        <div class="compare-item"><div class="ci no">✕</div>El usuario no sabe cómo abrirlo</div>
+      </div>
+      <div class="compare-col">
+        <div class="compare-col-head">
+          <div class="compare-col-icon pf-icon">🔗</div>
+          <div><div class="compare-col-name">Ahora: Enlace URL directo</div><div class="compare-col-sub">Toca el enlace → abre de inmediato</div></div>
+        </div>
+        <div class="compare-item"><div class="ci yes">✓</div>Un toque y se abre en el navegador</div>
+        <div class="compare-item"><div class="ci yes">✓</div>iPhone, Android, Huawei, PC — todos</div>
+        <div class="compare-item"><div class="ci pro">★</div>Al completar, envía a WhatsApp automático</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REMITENTE -->
+  <div class="section-label">Datos del Remitente</div>
+  <div class="card">
+    <div class="sender-preview">
+      <div class="sender-avatar" id="avatarInitial">?</div>
+      <div><div class="sender-name-big" id="previewName">Tu nombre o empresa</div><div class="sender-sub" id="previewSub">cargo · contacto</div></div>
+    </div>
+    <div class="field-row">
+      <div><label>Nombre o Empresa *</label><input type="text" id="senderName" placeholder="Empresa ABC o Juan Pérez" oninput="updateSender()"></div>
+      <div><label>Cargo / Rol</label><input type="text" id="senderRole" placeholder="Gerente Comercial" oninput="updateSender()"></div>
+    </div>
+    <div class="field-row" style="margin-top:10px">
+      <div>
+        <label>📲 WhatsApp del remitente * <span style="color:var(--red)">— las respuestas llegan aquí</span></label>
+        <input type="tel" id="senderPhone" placeholder="+57 300 000 0000" oninput="updateSender()">
+        <p class="help-text">Al completar el formulario, WhatsApp se abre <strong>automáticamente</strong> con las respuestas y se envía a este número.</p>
+      </div>
+      <div><label>Correo electrónico</label><input type="email" id="senderEmail" placeholder="correo@empresa.com" oninput="updateSender()"></div>
+    </div>
+    <div style="margin-top:10px"><label>Título del Formulario / Proyecto *</label><input type="text" id="surveyTitle" placeholder="Validación de Equipos Industriales — Proyecto 2025" oninput="updateSender()"></div>
+    <div style="margin-top:10px"><label>Descripción / Instrucciones para el destinatario</label><textarea id="surveyDesc" placeholder="Por favor complete este formulario con la información requerida..."></textarea></div>
+  </div>
+
+  <!-- DESTINATARIO -->
+  <div class="section-label">Datos del Destinatario</div>
+  <div class="card">
+    <div class="field-row">
+      <div><label>Nombre de la Empresa / Persona *</label><input type="text" id="recipientName" placeholder="Empresa ABC o Juan Pérez" oninput="updateSender()"></div>
+      <div><label>Contacto / Representante</label><input type="text" id="recipientContact" placeholder="Nombre del contacto principal" oninput="updateSender()"></div>
+    </div>
+    <div style="margin-top:12px">
+      <label>✏️ Mensaje de Bienvenida Personalizado</label>
+      <div style="display:flex;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="setGreetingTemplate('formal')">📝 Formal</button>
+        <button class="btn btn-outline btn-sm" onclick="setGreetingTemplate('amigable')">😊 Amigable</button>
+        <button class="btn btn-outline btn-sm" onclick="setGreetingTemplate('corto')">⚡ Corto</button>
+        <button class="btn btn-outline btn-sm" onclick="setGreetingTemplate('claro')">🎯 Directo</button>
+      </div>
+      <textarea id="recipientGreeting" placeholder="Escriba aquí el mensaje de saludo..." style="min-height:90px"></textarea>
+    </div>
+  </div>
+
+  <!-- NÚMERO DE CONTACTO DEL CLIENTE -->
+  <div class="section-label">Número de WhatsApp del Cliente</div>
+  <div class="card" style="padding:16px 20px">
+    <p class="help-text" style="margin-bottom:12px">El enlace que recibirá el cliente contiene el botón que envía directamente a su WhatsApp. Opcionalmente puede registrar aquí el número del cliente para enviarle el enlace desde este mismo formulario.</p>
+    <div id="clientPhonesContainer">
+      <div class="client-phone-row" style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="tel" class="client-phone-input" placeholder="+57 300 000 0000" style="flex:1">
+        <button class="btn btn-outline btn-sm" onclick="addClientPhone()" title="Agregar otro número">＋</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAVE DE ACCESO -->
+  <div class="section-label">Protección con Clave (Opcional)</div>
+  <div class="card" style="padding:16px 20px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <label style="margin:0;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600">
+        <input type="checkbox" id="usePassword" onchange="togglePassword()" style="width:18px;height:18px;cursor:pointer">
+        Proteger el formulario con clave de acceso
+      </label>
+    </div>
+    <div id="passwordSection" style="display:none">
+      <div class="field-row">
+        <div>
+          <label>Clave de acceso *</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="formPassword" placeholder="Ej: Proyecto2025" maxlength="30" style="flex:1">
+            <button class="btn btn-outline btn-sm" onclick="generateRandomPassword()">🎲 Aleatoria</button>
+          </div>
+        </div>
+        <div>
+          <label>Pista para el destinatario</label>
+          <input type="text" id="passwordHint" placeholder="Ej: La clave es el nombre del proyecto">
+        </div>
+      </div>
+      <div id="passwordDisplay" style="display:none;margin-top:10px;padding:10px 14px;background:#e8edfb;border:1.5px solid #1a4fd6;border-radius:6px;font-size:13px;color:#0f1729">
+        🔐 Clave: <strong id="passwordShowVal"></strong>
+      </div>
+    </div>
+    <p class="help-text" id="noPasswordNote">Sin clave: cualquier persona con el enlace puede abrirlo.</p>
+  </div>
+
+  <!-- VALIDITY -->
+  <div class="section-label">Vigencia del Formulario</div>
+  <div class="card" style="padding:16px 20px">
+    <div class="validity-row" id="validityRow"></div>
+    <p class="help-text">Al vencer la vigencia el formulario se bloquea. <strong>Permanente</strong> nunca se bloquea.</p>
+  </div>
+
+  <!-- QUESTION COUNT -->
+  <div class="section-label">Cantidad de Preguntas</div>
+  <div class="card" style="padding:16px 20px">
+    <div class="count-row" id="countRow"></div>
+    <p class="help-text">Entre 5 y 15 preguntas. Actualmente: <span id="currentCount" style="font-weight:700;color:var(--accent)">0</span></p>
+  </div>
+
+  <!-- QUESTIONS -->
+  <div class="section-label">Constructor de Preguntas</div>
+  <div id="questionsContainer"></div>
+  <button class="btn btn-outline" style="margin-bottom:24px" id="addQBtn" onclick="addQuestion()">＋ Agregar Pregunta</button>
+
+  <!-- GENERATE -->
+  <div class="card" style="background:var(--ink);border-color:var(--ink)">
+    <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:14px">🔗 Cuando el formulario esté listo, publíquelo para obtener un enlace URL que puede enviar por WhatsApp. El destinatario lo abre con un toque — sin descargar nada.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-outline" style="border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.7)" onclick="switchMode('preview')">👁 Vista Previa</button>
+      <button class="btn btn-green" onclick="publicarFormulario()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        🔗 Publicar y obtener enlace URL
+      </button>
+    </div>
+  </div>
+  <div id="waBox" style="margin-top:16px;display:none"></div>
+</div>
+
+<!-- PANEL: PREVIEW -->
+<div class="panel" id="panel-preview">
+  <div id="previewContent"></div>
+  <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
+    <button class="btn btn-outline" onclick="switchMode('creator')">← Volver a editar</button>
+    <button class="btn btn-green" onclick="publicarFormulario()">🔗 Publicar y obtener enlace URL</button>
+  </div>
+  <div id="waBoxPreview" style="margin-top:16px;display:none"></div>
+</div>
+
+<!-- PANEL: FILL -->
+<div class="panel" id="panel-fill">
+  <div id="fillContent"></div>
+  <div class="success-screen" id="successBox"></div>
+</div>
+
+</div><!-- end .app -->
+
+<script>
+// ===================== STATE =====================
+let questions = [];
+let surveyData = {};
+let targetCount = 5;
+let validityDays = 3;
+let fillAnswers = {};
+let fillMultiSel = {};
+
+// ===================== INIT =====================
+window.onload = () => {
+  const cr = document.getElementById('countRow');
+  for(let i=5;i<=15;i++){
+    const b = document.createElement('button');
+    b.className='count-btn'+(i===5?' active':'');
+    b.textContent = i;
+    b.onclick = () => setCount(i);
+    cr.appendChild(b);
+  }
+  const vr = document.getElementById('validityRow');
+  const opts = [1,2,3,5,7,10,'Permanente'];
+  opts.forEach((v,idx) => {
+    const b = document.createElement('button');
+    b.className='validity-btn'+(idx===2?' active':'');
+    b.textContent = typeof v==='number' ? v+' día'+(v>1?'s':'') : v;
+    b.onclick = () => {
+      validityDays = typeof v==='number' ? v : 0;
+      document.querySelectorAll('.validity-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    };
+    vr.appendChild(b);
+  });
+  setCount(5);
+  updateSender();
+  setTimeout(()=>{
+    const sample = {id:Date.now(),type:'dropdown',text:'¿Qué tipo de equipo o producto requiere para su proyecto?',options:['Equipos de cómputo','Maquinaria industrial','Electrodomésticos','Mobiliario de oficina','Otro'],detail:'Seleccione la categoría principal.',images:[],required:true};
+    questions.push(sample);
+    renderQuestions();
+    document.getElementById('currentCount').textContent=1;
+    document.getElementById('surveyTitle').value='Validación de Requerimientos del Proyecto';
+    updateSender();
+  },100);
+};
+
+function setCount(n){
+  targetCount=n;
+  document.querySelectorAll('.count-btn').forEach((b,i)=>b.classList.toggle('active',i+5===n));
+  document.getElementById('currentCount').textContent=questions.length;
+  document.getElementById('addQBtn').style.display=questions.length<targetCount?'':'none';
+}
+
+function updateSender(){
+  const name=document.getElementById('senderName').value.trim()||'Tu nombre o empresa';
+  const role=document.getElementById('senderRole').value.trim();
+  const phone=document.getElementById('senderPhone').value.trim();
+  document.getElementById('previewName').textContent=name;
+  document.getElementById('previewSub').textContent=[role,phone].filter(Boolean).join(' · ')||'cargo · contacto';
+  document.getElementById('avatarInitial').textContent=name[0]?.toUpperCase()||'?';
+}
+
+const TYPES=[
+  {id:'single',icon:'⊙',label:'Una opción'},
+  {id:'multi',icon:'☑',label:'Múltiple'},
+  {id:'text',icon:'✎',label:'Texto libre'},
+  {id:'dropdown',icon:'▾',label:'Desplegable'},
+  {id:'scale',icon:'⚡',label:'Escala 1–5'},
+  {id:'image',icon:'🖼',label:'Con imagen'},
+];
+
+function addQuestion(){
+  if(questions.length>=targetCount){alert('Ya alcanzó el número máximo.');return;}
+  const id=Date.now();
+  questions.push({id,type:'single',text:'',options:['Opción 1','Opción 2'],detail:'',images:[],required:true});
+  renderQuestions();
+  document.getElementById('currentCount').textContent=questions.length;
+  if(questions.length>=targetCount) document.getElementById('addQBtn').style.display='none';
+}
+
+function removeQuestion(id){
+  questions=questions.filter(q=>q.id!==id);
+  renderQuestions();
+  document.getElementById('currentCount').textContent=questions.length;
+  document.getElementById('addQBtn').style.display='';
+}
+
+function renderQuestions(){
+  const c=document.getElementById('questionsContainer');
+  c.innerHTML='';
+  questions.forEach((q,idx)=>{
+    const div=document.createElement('div');
+    div.className='q-card';
+    const typeObj=TYPES.find(t=>t.id===q.type)||TYPES[0];
+    div.innerHTML=`
+      <div class="q-header">
+        <div class="q-num">${idx+1}</div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--ink3);margin-bottom:2px">Pregunta ${idx+1} de ${targetCount}</div>
+          <div class="q-type-badge">${typeObj.icon} ${typeObj.label}</div>
+        </div>
+        <div class="q-actions">
+          ${idx>0?`<button class="btn btn-outline btn-icon btn-sm" onclick="moveQ(${q.id},-1)">↑</button>`:''}
+          ${idx<questions.length-1?`<button class="btn btn-outline btn-icon btn-sm" onclick="moveQ(${q.id},1)">↓</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="removeQuestion(${q.id})">Eliminar</button>
+        </div>
+      </div>
+      <div class="q-body">
+        <div style="margin-bottom:12px">
+          <label>Tipo de pregunta</label>
+          <div class="type-grid">
+            ${TYPES.map(t=>`<div class="type-opt${q.type===t.id?' selected':''}" onclick="setType(${q.id},'${t.id}')"><div class="icon">${t.icon}</div><div class="lbl">${t.label}</div></div>`).join('')}
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label>Texto de la pregunta *</label>
+          <input type="text" value="${esc(q.text)}" placeholder="Ej: ¿Qué especificaciones requiere?" oninput="setQText(${q.id},this.value)">
+        </div>
+        ${(q.type==='single'||q.type==='multi'||q.type==='dropdown'||q.type==='image')?renderOptsEditor(q):''}
+        ${q.type==='scale'?`<p class="help-text">El destinatario verá escala del 1 (Muy malo) al 5 (Excelente).</p>`:''}
+        ${q.type==='text'?`<p class="help-text">El destinatario escribirá su respuesta libremente.</p>`:''}
+        <div style="margin-top:14px">
+          <label>📋 Información técnica desplegable (acordeón)</label>
+          <textarea placeholder="Especificaciones, normas, detalles técnicos..." oninput="setQDetail(${q.id},this.value)">${esc(q.detail)}</textarea>
+        </div>
+        <div style="margin-top:14px">
+          <label>🖼 Imágenes de referencia (opcional)</label>
+          <div class="img-upload-area" id="imgArea-${q.id}">
+            <input type="file" accept="image/*" multiple onchange="addImages(${q.id},this)">
+            <div style="font-size:13px;color:var(--ink3)">📎 Haga clic o arrastre imágenes aquí</div>
+          </div>
+          <div class="img-thumbs" id="thumbs-${q.id}">
+            ${(q.images||[]).map((img,ii)=>`<div class="img-thumb"><img src="${img}"><button class="img-thumb-del" onclick="removeImg(${q.id},${ii})">×</button></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    c.appendChild(div);
+  });
+}
+
+function renderOptsEditor(q){
+  return `<div><label>Opciones de respuesta</label>
+    ${q.options.map((o,i)=>`<div class="option-row"><div class="option-bullet${q.type==='multi'?' check':''}"></div><input class="option-input" type="text" value="${esc(o)}" placeholder="Opción ${i+1}" oninput="setOption(${q.id},${i},this.value)"><button style="border:none;background:none;color:#c0504a;font-size:18px;cursor:pointer" onclick="removeOption(${q.id},${i})">×</button></div>`).join('')}
+    <button class="add-option-btn" onclick="addOption(${q.id})">＋ Agregar opción</button>
+  </div>`;
+}
+
+function addImages(id,input){
+  const q=questions.find(q=>q.id===id);if(!q)return;if(!q.images)q.images=[];
+  const files=Array.from(input.files).slice(0,3-q.images.length);let loaded=0;
+  files.forEach(f=>{const r=new FileReader();r.onload=e=>{q.images.push(e.target.result);loaded++;if(loaded===files.length)renderQuestions();};r.readAsDataURL(f);});
+}
+function removeImg(id,idx){const q=questions.find(q=>q.id===id);if(q&&q.images)q.images.splice(idx,1);renderQuestions();}
+function setType(id,type){const q=questions.find(q=>q.id===id);if(!q)return;q.type=type;if(!q.options||q.options.length===0)q.options=['Opción 1','Opción 2'];renderQuestions();}
+function setQText(id,val){const q=questions.find(q=>q.id===id);if(q)q.text=val;}
+function setQDetail(id,val){const q=questions.find(q=>q.id===id);if(q)q.detail=val;}
+function setOption(id,idx,val){const q=questions.find(q=>q.id===id);if(q)q.options[idx]=val;}
+function addOption(id){const q=questions.find(q=>q.id===id);if(q){q.options.push('Nueva opción');renderQuestions();}}
+function removeOption(id,idx){const q=questions.find(q=>q.id===id);if(q&&q.options.length>2){q.options.splice(idx,1);renderQuestions();}}
+function moveQ(id,dir){const idx=questions.findIndex(q=>q.id===id);const ni=idx+dir;if(ni<0||ni>=questions.length)return;[questions[idx],questions[ni]]=[questions[ni],questions[idx]];renderQuestions();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function addClientPhone(){
+  const container=document.getElementById('clientPhonesContainer');
+  const row=document.createElement('div');row.className='client-phone-row';row.style.cssText='display:flex;gap:8px;margin-bottom:8px';
+  row.innerHTML=`<input type="tel" class="client-phone-input" placeholder="+57 300 000 0000" style="flex:1"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(row);
+}
+
+function generateRandomPassword(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let pwd='';
+  for(let i=0;i<8;i++)pwd+=chars[Math.floor(Math.random()*chars.length)];
+  const formatted=pwd.slice(0,4)+'-'+pwd.slice(4);
+  document.getElementById('formPassword').value=formatted;
+  document.getElementById('passwordShowVal').textContent=formatted;
+  document.getElementById('passwordDisplay').style.display='block';
+}
+
+function setGreetingTemplate(type){
+  const name=document.getElementById('recipientName')?.value||'estimado cliente';
+  const sender=document.getElementById('senderName')?.value||'nosotros';
+  const templates={
+    formal:`Estimado/a ${name},\n\nNos complace enviarle este formulario de validación. Sus respuestas nos permitirán presentarle una propuesta técnica ajustada a sus requerimientos.\n\nAtentamente, ${sender}`,
+    amigable:`¡Hola ${name}! 👋\n\nLe compartimos este formulario para conocer mejor lo que necesita. ¡Es rápido y sencillo!\n\nGracias 😊\n${sender}`,
+    corto:`Hola ${name},\n\nComplete este formulario con sus requerimientos. Sus respuestas nos ayudarán a preparar una propuesta personalizada.\n\nGracias, ${sender}`,
+    claro:`${name}, buen día.\n\nAdjunto formulario para validar sus requerimientos. Complete las preguntas y al final sus respuestas se enviarán automáticamente.\n\n${sender}`
+  };
+  document.getElementById('recipientGreeting').value=templates[type]||'';
+}
+
+function togglePassword(){
+  const cb=document.getElementById('usePassword');
+  document.getElementById('passwordSection').style.display=cb.checked?'block':'none';
+  document.getElementById('noPasswordNote').style.display=cb.checked?'none':'block';
+  if(!cb.checked)document.getElementById('passwordDisplay').style.display='none';
+}
+
+function getClientPhones(){
+  return Array.from(document.querySelectorAll('.client-phone-input')).map(i=>i.value.trim()).filter(Boolean).map(p=>p.replace(/[^0-9+]/g,''));
+}
+
+function buildSurveyObj(){
+  const usePass=document.getElementById('usePassword')?.checked||false;
+  return {
+    title:document.getElementById('surveyTitle').value||'Formulario de Validación',
+    desc:document.getElementById('surveyDesc').value||'',
+    validity:validityDays,
+    createdAt:new Date().toISOString(),
+    sender:{
+      name:document.getElementById('senderName').value||'Remitente',
+      role:document.getElementById('senderRole').value||'',
+      phone:document.getElementById('senderPhone').value||'',
+      email:document.getElementById('senderEmail').value||'',
+    },
+    recipient:{
+      name:document.getElementById('recipientName')?.value||'',
+      contact:document.getElementById('recipientContact')?.value||'',
+      greeting:document.getElementById('recipientGreeting')?.value||'',
+    },
+    clientPhones:getClientPhones(),
+    password:usePass?(document.getElementById('formPassword')?.value||''):'',
+    passwordHint:usePass?(document.getElementById('passwordHint')?.value||''):'',
+    questions:questions.map(q=>({...q,images:q.images||[]})),
+  };
+}
+
+// ===================== PREVIEW =====================
+function switchMode(mode){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+mode).classList.add('active');
+  const tabs=['creator','preview','fill'];
+  document.querySelectorAll('.mode-tab')[tabs.indexOf(mode)]?.classList.add('active');
+  if(mode==='preview')renderPreviewContent();
+  if(mode==='fill')renderFill(buildSurveyObj());
+}
+function renderPreviewContent(){
+  document.getElementById('previewContent').innerHTML=buildFormHTML(buildSurveyObj(),false);
+}
+
+// ===================== PUBLICAR COMO URL =====================
+async function publicarFormulario(){
+  const d=buildSurveyObj();
+  if(!d.sender.name||d.sender.name==='Remitente'){alert('Ingrese el nombre del remitente.');return;}
+  if(!d.sender.phone){alert('Ingrese el teléfono WhatsApp del remitente — las respuestas se envían ahí.');return;}
+  if(!d.title){alert('Ingrese el título del formulario.');return;}
+  if(document.getElementById('usePassword')?.checked&&!d.password){alert('Ingrese la clave de acceso o desactive la protección.');return;}
+  if(d.questions.length===0){alert('Agregue al menos una pregunta.');return;}
+
+  document.getElementById('loadingOverlay').style.display='flex';
+
+  // Pequeña pausa para que el loading se muestre
+  await new Promise(r=>setTimeout(r,600));
+
+  try {
+    // ── Comprimir y codificar los datos en base64 ──
+    // Genera una URL que se puede abrir directamente en cualquier dispositivo
+    const dataStr = JSON.stringify(d);
+    const encoded = btoa(unescape(encodeURIComponent(dataStr)));
+
+    if(encoded.length > 15000){
+      // Si las imágenes son muy pesadas, usar archivo HTML
+      document.getElementById('loadingOverlay').style.display='none';
+      usarArchivoHTML(d);
+      return;
+    }
+
+    // URL que apunta a este mismo archivo con los datos embebidos
+    const baseUrl = window.location.href.split('?')[0];
+    const formUrl = baseUrl + '?d=' + encoded;
+
+    document.getElementById('loadingOverlay').style.display='none';
+    mostrarResultadoURL(d, formUrl, null, false);
+
+  } catch(e) {
+    document.getElementById('loadingOverlay').style.display='none';
+    usarArchivoHTML(d);
+  }
+}
+
+function usarArchivoHTML(d){
+  // Ultimo fallback: generar archivo HTML descargable
+  const html = buildClientFile(d);
+  const blob = new Blob([html],{type:'text/html;charset=utf-8'});
+  const blobUrl = URL.createObjectURL(blob);
+  const safeName = (d.title||'Formulario').replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'_');
+  mostrarResultadoArchivo(d, blobUrl, safeName+'.html', html);
+}
+
+function mostrarResultadoURL(d, formUrl, binId, isLocal){
+  const validLabel=d.validity===0?'permanente':d.validity+' día'+(d.validity>1?'s':'');
+  const claveInfo=d.password?`\n🔐 *Clave de acceso:* ${d.password}`:'' ;
+
+  const waText=
+    `📋 *${d.title}*\n\n`+
+    `Hola${d.recipient.name?' '+d.recipient.name:''}! Le comparto el enlace de su formulario de validación:\n\n`+
+    `🔗 ${formUrl}\n\n`+
+    `✅ Solo toque el enlace — se abre directo en su navegador sin descargar nada.\n`+
+    `Complete las preguntas y sus respuestas me llegarán automáticamente por WhatsApp.\n\n`+
+    `⏰ Vigencia: ${validLabel}${claveInfo}\n\n`+
+    `_Enviado por ${d.sender.name}${d.sender.role?' · '+d.sender.role:''}_`;
+
+  const clientPhones=d.clientPhones&&d.clientPhones.length>0?d.clientPhones:[];
+  const waMsg=encodeURIComponent(waText);
+  const waUrls=clientPhones.length>0
+    ? clientPhones.map(p=>({phone:p,url:`https://wa.me/${p.replace(/[^0-9]/g,'')}?text=${waMsg}`}))
+    : [{phone:'',url:`https://wa.me/?text=${waMsg}`}];
+
+  const phoneButtonsHTML = waUrls.length===1&&!waUrls[0].phone
+    ? `<a href="${waUrls[0].url}" target="_blank" class="btn btn-green" style="font-size:14px;padding:12px 20px">📲 Abrir WhatsApp y enviar enlace</a>`
+    : waUrls.map(w=>`<a href="${w.url}" target="_blank" class="btn btn-green">📲 Enviar a ${w.phone}</a>`).join('');
+
+  const claveHTML = d.password
+    ? `<div style="margin-top:10px;padding:10px 14px;background:#e8edfb;border:1.5px solid #1a4fd6;border-radius:6px;font-size:12px">🔐 <strong>Clave:</strong> <code style="background:#fff;padding:2px 8px;border-radius:4px;font-size:14px;letter-spacing:2px">${d.password}</code> — Compártala por separado.</div>` : '';
+
+  const boxId=document.getElementById('waBox')?'waBox':'waBoxPreview';
+  const box=document.getElementById(boxId);
+  box.style.display='';
+  box.innerHTML=`
+    <div class="wa-result-box">
+      <div class="wa-step" style="background:var(--green-light);border-bottom:2px solid #86efac">
+        <div class="wa-step-head"><div class="wa-step-num" style="background:var(--green)">✓</div><div class="wa-step-title" style="color:#15803d">¡Enlace URL generado exitosamente!</div></div>
+        <div style="margin-left:36px;margin-bottom:12px">
+          <div style="font-size:11px;color:#166534;margin-bottom:6px">Enlace del formulario — compártalo por WhatsApp, correo o cualquier medio:</div>
+          <div class="url-display" onclick="copiarURL('${formUrl}',this)" title="Clic para copiar">${formUrl}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="url-copy-btn" onclick="copiarURL('${formUrl}',this)">📋 Copiar enlace</button>
+            <a href="${formUrl}" target="_blank" class="btn btn-outline btn-sm">🔗 Abrir y probar</a>
+          </div>
+          ${isLocal?`<div style="margin-top:8px;font-size:11px;color:#166534;background:#f0fdf4;padding:8px 10px;border-radius:6px">✅ Este enlace funciona en cualquier dispositivo donde esté disponible este archivo HTML.</div>`:''}
+        </div>
+        ${claveHTML}
+      </div>
+      <div class="wa-step">
+        <div class="wa-step-head"><div class="wa-step-num" style="background:#25D366">2</div><div class="wa-step-title">Envíe el enlace al destinatario por WhatsApp</div></div>
+        <div class="wa-step-desc">El mensaje ya tiene el enlace incluido. El destinatario solo toca el enlace — se abre en su navegador sin descargar nada.</div>
+        <div class="wa-step-actions" style="flex-wrap:wrap;gap:8px">
+          ${phoneButtonsHTML}
+          <button class="btn btn-outline btn-sm" onclick="copiarMensaje(decodeURIComponent('${encodeURIComponent(waText)}'))">📋 Copiar mensaje</button>
+        </div>
+      </div>
+      <div class="wa-step" style="background:var(--green-light)">
+        <div class="wa-step-head"><div class="wa-step-num" style="background:var(--green)">3</div><div class="wa-step-title">El cliente completa — WhatsApp se abre AUTOMÁTICAMENTE</div></div>
+        <div class="wa-step-desc">Al pulsar "Enviar", WhatsApp se abre <strong>automáticamente</strong> con todas las respuestas pre-llenadas y se envían directo a su número <strong>${d.sender.phone}</strong>. El cliente no tiene que hacer nada más.</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('fillTab').style.display='';
+  box.scrollIntoView({behavior:'smooth'});
+
+  // Si la URL tiene parámetro ?form= o ?d=, habilitar el modo viewer
+  window._lastFormData = d;
+  window._lastFormUrl = formUrl;
+}
+
+function mostrarResultadoArchivo(d, blobUrl, fileName, html){
+  // Fallback cuando los datos son muy grandes para URL
+  const box=document.getElementById('waBox')||document.getElementById('waBoxPreview');
+  box.style.display='';
+  const waText = `📋 *${d.title}*\n\nHola! Le comparto el formulario de validación.\n📎 Abra el archivo adjunto en su navegador.\n\n_${d.sender.name}_`;
+  const waMsg = encodeURIComponent(waText);
+  const clientPhones=d.clientPhones&&d.clientPhones.length>0?d.clientPhones:[];
+  const waUrls=clientPhones.length>0
+    ? clientPhones.map(p=>({phone:p,url:`https://wa.me/${p.replace(/[^0-9]/g,'')}?text=${waMsg}`}))
+    : [{phone:'',url:`https://wa.me/?text=${waMsg}`}];
+  const phoneButtonsHTML = waUrls.length===1&&!waUrls[0].phone
+    ? `<a href="${waUrls[0].url}" target="_blank" class="btn btn-green">📲 WhatsApp</a>`
+    : waUrls.map(w=>`<a href="${w.url}" target="_blank" class="btn btn-green">📲 ${w.phone}</a>`).join('');
+
+  box.innerHTML=`
+    <div class="wa-result-box">
+      <div class="wa-step" style="background:#fff8e0;border-bottom:2px solid #fcd34d">
+        <div class="wa-step-head"><div class="wa-step-num" style="background:#d97706">!</div><div class="wa-step-title" style="color:#92400e">Formulario muy grande — usando archivo HTML</div></div>
+        <div class="wa-step-desc" style="color:#7a5000">El formulario contiene imágenes grandes. Se generó como archivo HTML para compartir.</div>
+        <div class="wa-step-actions">
+          <a href="${blobUrl}" download="${fileName}" class="btn btn-primary">⬇ Descargar archivo HTML</a>
+        </div>
+      </div>
+      <div class="wa-step">
+        <div class="wa-step-head"><div class="wa-step-num" style="background:#25D366">2</div><div class="wa-step-title">Adjunte el archivo en WhatsApp</div></div>
+        <div class="wa-step-actions">${phoneButtonsHTML}</div>
+      </div>
+    </div>
+  `;
+  box.scrollIntoView({behavior:'smooth'});
+}
+
+function copiarURL(url, btn){
+  navigator.clipboard?.writeText(url).then(()=>{
+    if(btn&&btn.classList){
+      const prev=btn.textContent;
+      btn.textContent='✅ ¡Copiado!';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent=prev;btn.classList.remove('copied');},2000);
+    }else{
+      const prev=btn.textContent;btn.textContent='✅ ¡Copiado!';
+      setTimeout(()=>btn.textContent=prev,2000);
+    }
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    alert('✅ Enlace copiado al portapapeles');
+  });
+}
+
+function copiarMensaje(texto){
+  navigator.clipboard?.writeText(texto).then(()=>alert('✅ Mensaje copiado al portapapeles')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=texto;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    alert('✅ Mensaje copiado al portapapeles');
+  });
+}
+
+// ===================== VIEWER: cargar formulario desde URL =====================
+// Si la URL tiene ?form=ID (JSONbin) o ?d=base64, cargar y mostrar el formulario
+(async function checkURLMode(){
+  const params = new URLSearchParams(window.location.search);
+  const binId = params.get('form');
+  const encoded = params.get('d');
+
+  if(!binId && !encoded) return; // modo creador normal
+
+  // Modo viewer: ocultar el creador y mostrar el formulario
+  document.querySelector('.app').innerHTML = '<div id="viewerRoot" style="min-height:100vh;background:#f0f2f7"></div>';
+
+  const root = document.getElementById('viewerRoot');
+  root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f0f2f7"><div style="text-align:center;padding:40px"><div style="width:48px;height:48px;border:4px solid #e8edfb;border-top:4px solid #1a4fd6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px"></div><div style="font-size:15px;font-weight:700;color:#0f1729">Cargando formulario...</div></div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+
+  let formData = null;
+
+  if(binId){
+    try {
+      // Intentar cargar desde JSONbin si existe API key configurada
+      const resp = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
+      if(resp.ok){
+        const result = await resp.json();
+        formData = result.record;
+      }
+    } catch(e){}
+  }
+
+  if(!formData && encoded){
+    try {
+      formData = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    } catch(e){}
+  }
+
+  if(!formData){
+    root.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px"><div style="background:#fff;border-radius:12px;padding:40px;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.1)"><div style="font-size:48px;margin-bottom:16px">❌</div><h2 style="font-size:1.3rem;font-weight:800;margin-bottom:10px">Formulario no disponible</h2><p style="color:#8a8fa8;font-size:13px">El enlace puede haber expirado o ser inválido. Solicite un nuevo enlace al remitente.</p></div></div>`;
+    return;
+  }
+
+  // Mostrar el formulario
+  renderViewer(formData);
+})();
+
+function renderViewer(d){
+  const root = document.getElementById('viewerRoot');
+
+  // Verificar vigencia
+  let expired = false;
+  if(d.validity && d.validity !== 0){
+    const created = new Date(d.createdAt||Date.now());
+    const expires = new Date(created.getTime()+d.validity*24*60*60*1000);
+    expired = new Date() > expires;
+  }
+
+  // Construir pantalla de clave si aplica
+  let pwdHtml = '';
+  if(d.password){
+    pwdHtml = `<div id="pwdScreen" style="display:flex;align-items:center;justify-content:center;min-height:80vh;padding:20px">
+      <div style="background:#fff;border-radius:12px;padding:36px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(15,23,41,.12)">
+        <div style="font-size:48px;margin-bottom:16px">🔐</div>
+        <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:8px">Formulario Protegido</h2>
+        <p style="font-size:13px;color:#8a8fa8;margin-bottom:20px">Ingrese la clave para acceder al formulario.</p>
+        ${d.passwordHint?`<p style="background:#fff8e0;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:16px">💡 Pista: ${escHtml(d.passwordHint)}</p>`:''}
+        <div id="vpwdError" style="color:#dc2626;font-size:12px;font-weight:700;margin-bottom:12px;display:none">⚠️ Clave incorrecta. Intente de nuevo.</div>
+        <input type="password" id="vpwdInput" style="width:100%;padding:13px 16px;border:2px solid #dde1ed;border-radius:8px;font-size:15px;text-align:center;letter-spacing:2px;margin-bottom:10px;outline:none;font-family:inherit" placeholder="Ingrese la clave" onkeydown="if(event.key==='Enter')vCheckPwd()">
+        <button onclick="vCheckPwd()" style="width:100%;padding:14px;background:#1a4fd6;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">🔓 Acceder al formulario</button>
+      </div>
+    </div>`;
+  }
+
+  root.innerHTML = `
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--acc:#1a4fd6;--acc-l:#e8edfb;--ink:#0f1729;--ink2:#3a4055;--ink3:#8a8fa8;--bg:#f0f2f7;--bdr:#dde1ed;--red:#dc2626;--green:#16a34a}
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    .vtop{background:#0f1729;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+    .vticon{background:#1a4fd6;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+    .vwrap{max-width:680px;margin:0 auto;padding:24px 16px 60px}
+    .vsh{background:linear-gradient(135deg,#0f1729,#1a2540);color:#fff;padding:26px 20px 20px;border-radius:8px 8px 0 0}
+    .vsh h2{font-size:1.4rem;font-weight:800;margin-bottom:6px;line-height:1.3}
+    .vsh p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5}
+    .vsbar{background:#1a4fd6;color:#fff;padding:10px 20px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:20px;border-radius:0 0 8px 8px;flex-wrap:wrap}
+    .vpw{background:#dde1ed;height:5px;border-radius:3px;margin-bottom:20px}
+    .vpf{height:5px;background:linear-gradient(90deg,#1a4fd6,#0ea5e9);border-radius:3px;transition:width .4s}
+    .vfq{background:#fff;border:1px solid #dde1ed;border-radius:8px;padding:20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(15,23,41,.06);transition:border-color .2s}
+    .vfq-lbl{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;line-height:1.4}
+    .vfq-n{background:#0f1729;color:#fff;width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .vopt{display:flex;align-items:center;gap:10px;padding:11px 14px;margin-bottom:6px;border:1.5px solid #dde1ed;border-radius:6px;cursor:pointer;transition:all .15s;user-select:none}
+    .vopt:hover{border-color:#1a4fd6;background:#e8edfb}
+    .vopt.sel{border-color:#1a4fd6;background:#e8edfb}
+    .vblt{width:18px;height:18px;border:2px solid #dde1ed;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .vblt.sq{border-radius:4px}
+    .vopt.sel .vblt{background:#1a4fd6;border-color:#1a4fd6}
+    .vopt.sel .vblt::after{content:'✓';color:#fff;font-size:10px;font-weight:800}
+    .vfin{width:100%;padding:11px 14px;border:1.5px solid #dde1ed;border-radius:6px;font-family:inherit;font-size:13px;background:#fafbff;transition:border-color .2s;outline:none}
+    .vfin:focus{border-color:#1a4fd6;box-shadow:0 0 0 3px #e8edfb;background:#fff}
+    textarea.vfin{resize:vertical;min-height:80px}
+    select.vfin{background:#fafbff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8fa8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 14px center;-webkit-appearance:none;cursor:pointer}
+    .vsrow{display:flex;gap:6px;flex-wrap:wrap}
+    .vsopt{flex:1;min-width:52px;border:1.5px solid #dde1ed;border-radius:6px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s}
+    .vsopt:hover,.vsopt.sel{border-color:#1a4fd6;background:#e8edfb}
+    .vsopt strong{display:block;font-size:16px;margin-bottom:2px}
+    .vsopt span{font-size:9px;color:#8a8fa8}
+    .vacc{border:1.5px solid #dde1ed;border-radius:6px;margin-top:10px;overflow:hidden}
+    .vacc-h{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:#fafbff;font-size:12px;font-weight:700;user-select:none}
+    .vacc-h:hover{background:#e8edfb}
+    .vacc-b{display:none;padding:14px;font-size:13px;color:#3a4055;line-height:1.6;border-top:1px solid #dde1ed;background:#fff}
+    .vacc-b.open{display:block}
+    .vgreet{background:linear-gradient(135deg,#e8f4fd,#f0f7ff);border:1.5px solid #b0d4f0;border-radius:8px;padding:20px;margin-bottom:16px}
+    .vthanks{background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1.5px solid #86efac;border-radius:8px;padding:20px;margin:20px 0;text-align:center}
+    .vcmb{background:#fff;border:1px solid #dde1ed;border-radius:8px;padding:20px;margin-top:20px;box-shadow:0 2px 8px rgba(15,23,41,.06)}
+    label{display:block;font-size:11px;font-weight:700;color:#3a4055;margin-bottom:5px}
+    .vbadge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:12px}
+    .vbadge.ok{background:#dcfce7;color:#16a34a}
+    .vbadge.exp{background:#fee2e2;color:#dc2626}
+    .vbadge.perm{background:#e8edfb;color:#1a4fd6}
+    .vexpbanner{background:#fef3c7;border:1.5px solid #fbbf24;border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
+    .vsucc{display:none;background:#fff;border-radius:8px;padding:40px 20px;text-align:center;border:1px solid #dde1ed;box-shadow:0 4px 24px rgba(15,23,41,.1)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:480px){.vwrap{padding:16px 12px 60px}}
+    </style>
+
+    <div class="vtop">
+      <div class="vticon">📋</div>
+      <div style="flex:1">
+        <div style="font-size:.9rem;font-weight:800">ProyectoForm</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em">Validación de Proyecto</div>
+      </div>
+      <span id="vtopStatus" style="font-size:11px;color:rgba(255,255,255,.5)">Complete el formulario</span>
+    </div>
+
+    ${pwdHtml}
+
+    <div id="vmainWrap" ${d.password?'style="display:none"':''}>
+      <div class="vwrap">
+        <div class="vsh">
+          <div id="vbadge" class="vbadge ok">⏰ Calculando...</div>
+          <h2>${escHtml(d.title)}</h2>
+          <p>${escHtml(d.desc||'Complete este formulario con la información requerida.')}</p>
+        </div>
+        <div class="vsbar">
+          📤 De: <strong>${escHtml(d.sender.name)}</strong>
+          ${d.sender.role?' · '+escHtml(d.sender.role):''}
+          ${d.sender.phone?' &nbsp;📞 '+escHtml(d.sender.phone):''}
+        </div>
+
+        ${(d.recipient&&(d.recipient.name||d.recipient.greeting))?`
+        <div class="vgreet">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#3a6ea8;margin-bottom:8px">🤝 Mensaje de Bienvenida</div>
+          ${d.recipient.name?`<div style="font-size:15px;font-weight:800;color:#0f1729;margin-bottom:6px">Estimado/a: ${escHtml(d.recipient.name)}${d.recipient.contact?' — Attn: '+escHtml(d.recipient.contact):''}</div>`:''}
+          ${d.recipient.greeting?`<p style="font-size:13px;color:#3a4055;line-height:1.6;margin:0">${escHtml(d.recipient.greeting).replace(/\n/g,'<br>')}</p>`:''}
+        </div>`:''}
+
+        <div id="vexpBanner" style="display:none" class="vexpbanner">
+          <div style="font-size:24px;flex-shrink:0">⏰</div>
+          <div><strong style="color:#d97706;display:block;margin-bottom:3px">Formulario vencido</strong><p style="font-size:12px;color:#7a5000">El período de respuesta ha finalizado. Contacte al remitente para recibir un nuevo enlace.</p></div>
+        </div>
+
+        <div class="vpw"><div class="vpf" id="vpf" style="width:0%"></div></div>
+
+        <div id="vformWrap">
+          ${d.questions.map((q,i)=>{
+            let inner='';
+            if(q.type==='single'||q.type==='image'){
+              inner=q.options.map((o,oi)=>`<div class="vopt" onclick="vpick(this,${i},${oi},'s')"><div class="vblt"></div><span>${escHtml(o)}</span></div>`).join('');
+            }else if(q.type==='multi'){
+              inner=q.options.map((o,oi)=>`<div class="vopt" onclick="vpick(this,${i},${oi},'m')"><div class="vblt sq"></div><span>${escHtml(o)}</span></div>`).join('');
+            }else if(q.type==='dropdown'){
+              inner=`<select class="vfin" id="vq${i}" onchange="vfillAnswers[${i}]=this.options[this.selectedIndex].text;vupd()"><option value="">— Seleccione una opción —</option>${q.options.map((o,oi)=>`<option value="${oi}">${escHtml(o)}</option>`).join('')}</select>`;
+            }else if(q.type==='text'){
+              inner=`<textarea class="vfin" id="vq${i}" placeholder="Escriba su respuesta aquí..." oninput="vfillAnswers[${i}]=this.value;vupd()"></textarea>`;
+            }else if(q.type==='scale'){
+              inner=`<div class="vsrow">${[1,2,3,4,5].map(n=>`<div class="vsopt" onclick="vpickScale(this,${i},${n})"><strong>${n}</strong><span>${['','Muy malo','Malo','Regular','Bueno','Excelente'][n]}</span></div>`).join('')}</div>`;
+            }
+            const imgAcc=(q.images&&q.images.length>0)?`<div class="vacc"><div class="vacc-h" onclick="vtAcc(this)">🖼 Ver imágenes de referencia <span>▼</span></div><div class="vacc-b"><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${q.images.map(src=>`<img src="${src}" style="max-width:260px;border-radius:4px;border:1px solid #dde1ed;cursor:pointer" onclick="this.style.maxWidth=this.style.maxWidth?'':'100%'">`).join('')}</div></div></div>`:'';
+            const detAcc=q.detail?`<div class="vacc" style="margin-top:8px"><div class="vacc-h" onclick="vtAcc(this)">📋 Ver información técnica <span>▼</span></div><div class="vacc-b">${escHtml(q.detail).replace(/\n/g,'<br>')}</div></div>`:'';
+            return `<div class="vfq" id="vfq${i}"><div class="vfq-lbl"><div class="vfq-n">${i+1}</div><span>${escHtml(q.text||'Pregunta '+(i+1))}<span style="color:#dc2626;margin-left:3px">*</span></span></div>${inner}${imgAcc}${detAcc}</div>`;
+          }).join('')}
+
+          <div class="vcmb">
+            <div style="font-size:14px;font-weight:800;margin-bottom:14px">💬 Comentarios y Recomendaciones</div>
+            <label>Comentarios adicionales</label>
+            <textarea class="vfin" id="vextraComments" style="min-height:90px" placeholder="Especificaciones, cantidades, plazos, observaciones..."></textarea>
+            <label style="margin-top:12px">Preferencias de marca, modelo o garantía</label>
+            <textarea class="vfin" id="vextraRecc" style="min-height:70px" placeholder="Ej: Prefiero marca X con garantía mínima 2 años..."></textarea>
+          </div>
+
+          <div class="vthanks">
+            <div style="font-size:28px;margin-bottom:8px">🙏</div>
+            <div style="font-size:15px;font-weight:800;color:#15803d;margin-bottom:6px">¡Muchas gracias por su colaboración!</div>
+            <p style="font-size:13px;color:#166534;line-height:1.6;margin:0">Al completar este formulario nos ayuda a presentarle una propuesta personalizada. <strong>Pulse el botón de abajo</strong> para enviar.</p>
+          </div>
+
+          <div id="vactsBtns" style="display:flex;flex-direction:column;gap:10px;padding-bottom:40px">
+            <button onclick="venviarWA()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:18px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(37,211,102,.4)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              📲 Enviar respuestas por WhatsApp
+            </button>
+            ${d.sender.email?`<button onclick="venviarCorreo()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;background:#1a4fd6;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">✉️ Enviar por Correo</button>`:''}
+          </div>
+        </div>
+        <div class="vsucc" id="vsuccessBox"></div>
+      </div>
+    </div>
+  `;
+
+  // ── SCRIPTS DEL VIEWER ──
+  const VTOTAL = d.questions.length;
+  const vfillAnswers = {};
+  const vfillMultiSel = {};
+  let vIsExpired = false;
+
+  window.vCheckPwd = function(){
+    const input=document.getElementById('vpwdInput');
+    const err=document.getElementById('vpwdError');
+    if(input.value===d.password){
+      document.getElementById('pwdScreen').style.display='none';
+      document.getElementById('vmainWrap').style.display='';
+    } else {
+      err.style.display='block';input.value='';input.focus();
+    }
+  };
+
+  // Verificar vigencia
+  const vbadge=document.getElementById('vbadge');
+  const veb=document.getElementById('vexpBanner');
+  const vab=document.getElementById('vactsBtns');
+  if(d.validity===0){
+    vbadge.className='vbadge perm';vbadge.textContent='♾ Vigencia Permanente';
+  } else {
+    const created=new Date(d.createdAt||Date.now());
+    const expires=new Date(created.getTime()+d.validity*24*60*60*1000);
+    if(new Date()>expires){
+      vIsExpired=true;
+      vbadge.className='vbadge exp';vbadge.textContent='⛔ Formulario Vencido';
+      veb.style.display='flex';
+      document.querySelectorAll('.vopt,.vsopt').forEach(e=>{e.style.pointerEvents='none';e.style.opacity='.5'});
+      document.querySelectorAll('select.vfin,textarea.vfin').forEach(e=>e.setAttribute('disabled',''));
+      if(vab)vab.style.display='none';
+    } else {
+      const diff=Math.ceil((expires-new Date())/(1000*60*60*24));
+      vbadge.className='vbadge ok';vbadge.textContent='⏰ Vigente: '+diff+' día'+(diff>1?'s':'')+' restante'+(diff>1?'s':'');
+    }
+  }
+
+  window.vpick = function(el,qi,oi,type){
+    if(vIsExpired)return;
+    const fq=el.closest('.vfq');
+    if(type==='s'){
+      fq.querySelectorAll('.vopt').forEach(e=>e.classList.remove('sel'));
+      el.classList.add('sel');
+      vfillAnswers[qi]=d.questions[qi].options[oi];
+    } else {
+      el.classList.toggle('sel');
+      if(!vfillMultiSel[qi])vfillMultiSel[qi]={};
+      if(el.classList.contains('sel'))vfillMultiSel[qi][oi]=d.questions[qi].options[oi];
+      else delete vfillMultiSel[qi][oi];
+      vfillAnswers[qi]=Object.values(vfillMultiSel[qi]).join(', ');
+    }
+    vupd();
+  };
+  window.vpickScale = function(el,qi,val){
+    if(vIsExpired)return;
+    el.closest('.vsrow').querySelectorAll('.vsopt').forEach(e=>e.classList.remove('sel'));
+    el.classList.add('sel');
+    vfillAnswers[qi]=val+' — '+['','Muy malo','Malo','Regular','Bueno','Excelente'][val];
+    vupd();
+  };
+  window.vtAcc = function(h){
+    const b=h.nextElementSibling;b.classList.toggle('open');
+    const arr=h.querySelector('span:last-child');
+    if(arr)arr.textContent=b.classList.contains('open')?'▲':'▼';
+  };
+  window.vupd = function(){
+    const n=Object.keys(vfillAnswers).filter(k=>vfillAnswers[k]&&vfillAnswers[k]!=='').length;
+    const pf=document.getElementById('vpf');
+    if(pf)pf.style.width=Math.min(100,Math.round(n/VTOTAL*100))+'%';
+  };
+  window.vValidar = function(){
+    let ok=true;
+    d.questions.forEach((_,i)=>{
+      const fq=document.getElementById('vfq'+i);
+      if(!vfillAnswers[i]||vfillAnswers[i]===''){
+        if(fq){fq.style.border='1.5px solid #dc2626';fq.style.boxShadow='0 0 0 3px #fee2e2';}
+        ok=false;
+      } else {
+        if(fq){fq.style.border='1px solid #dde1ed';fq.style.boxShadow='0 2px 8px rgba(15,23,41,.06)';}
+      }
+    });
+    if(!ok)alert('⚠️ Por favor responda todas las preguntas marcadas en rojo.');
+    return ok;
+  };
+  window.vConstruirTexto = function(){
+    const NL='\n';
+    const sep='----------------------------------------';
+    const fecha=new Date().toLocaleString('es-CO');
+    let t='📋 *'+d.title+'*'+NL+'📅 '+fecha+NL+sep+NL;
+    d.questions.forEach((q,i)=>{
+      t+=NL+'*'+(i+1)+'. '+(q.text||'Pregunta '+(i+1))+'*'+NL;
+      t+='▸ '+(vfillAnswers[i]||'Sin respuesta')+NL;
+    });
+    const cm=document.getElementById('vextraComments')?.value?.trim()||'';
+    const rc=document.getElementById('vextraRecc')?.value?.trim()||'';
+    if(cm||rc){t+=NL+sep+NL+'💬 *Comentarios*'+NL;if(cm)t+=NL+'📝 '+cm+NL;if(rc)t+=NL+'⭐ Preferencias: '+rc+NL;}
+    t+=NL+sep+NL+'_Enviado con ProyectoForm_';
+    return t;
+  };
+  window.venviarWA = function(){
+    if(vIsExpired){alert('Este formulario ha vencido.');return;}
+    if(!window.vValidar())return;
+    const phone=(d.sender.phone||'').replace(/[^0-9]/g,'');
+    if(!phone){alert('El remitente no registró número de WhatsApp.');return;}
+    const texto=window.vConstruirTexto();
+    const waUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(texto);
+    // ── ABRIR WHATSAPP AUTOMÁTICAMENTE ──
+    window.open(waUrl,'_blank');
+    // Mostrar pantalla de éxito
+    const fw=document.getElementById('vformWrap');
+    const sb=document.getElementById('vsuccessBox');
+    if(fw)fw.style.display='none';
+    if(sb){
+      sb.style.display='block';
+      sb.innerHTML=`
+        <div style="font-size:56px;margin-bottom:16px">🎉</div>
+        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:10px">¡Respuestas enviadas!</h2>
+        <div style="background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1.5px solid #86efac;border-radius:10px;padding:22px;margin:16px 0">
+          <div style="font-size:32px;margin-bottom:10px">🙏</div>
+          <div style="font-size:15px;font-weight:800;color:#15803d;margin-bottom:8px">Muchas gracias por su colaboración</div>
+          <p style="font-size:13px;color:#166534;line-height:1.7;margin:0">WhatsApp se abrió automáticamente con sus respuestas. <strong>${escHtml(d.sender.name)}</strong> se comunicará con usted con una propuesta personalizada.</p>
+        </div>
+        <p style="font-size:12px;color:#8a8fa8">¿WhatsApp no se abrió?</p>
+        <a href="${'https://wa.me/'+(d.sender.phone||'').replace(/[^0-9]/g,'')+'?text='+encodeURIComponent(window.vConstruirTexto())}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:14px 24px;background:#25D366;color:#fff;border-radius:8px;font-size:14px;font-weight:800;text-decoration:none">📲 Abrir WhatsApp manualmente</a>
+      `;
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  };
+  window.venviarCorreo = function(){
+    if(vIsExpired){alert('Este formulario ha vencido.');return;}
+    if(!window.vValidar())return;
+    const email=d.sender.email||'';
+    if(!email)return;
+    const NL='\n';
+    let t=d.title+NL+'Fecha: '+new Date().toLocaleString('es-CO')+NL+NL+'========================================'+NL+'RESPUESTAS'+NL+'========================================'+NL;
+    d.questions.forEach((q,i)=>{t+=NL+(i+1)+'. '+(q.text||'Pregunta '+(i+1))+NL+'   '+(vfillAnswers[i]||'Sin respuesta')+NL;});
+    const cm=document.getElementById('vextraComments')?.value?.trim()||'';
+    const rc=document.getElementById('vextraRecc')?.value?.trim()||'';
+    if(cm)t+=NL+'Comentarios: '+cm;if(rc)t+=NL+'Preferencias: '+rc;
+    t+=NL+NL+'---'+NL+'Enviado con ProyectoForm';
+    window.location.href='mailto:'+email+'?subject='+encodeURIComponent('Respuestas: '+d.title)+'&body='+encodeURIComponent(t);
+    setTimeout(()=>{const fw=document.getElementById('vformWrap');if(fw)fw.style.display='none';const sb=document.getElementById('vsuccessBox');if(sb){sb.style.display='block';sb.innerHTML='<div style="font-size:48px;margin-bottom:14px">✅</div><h2 style="font-size:1.4rem;font-weight:800;margin-bottom:8px">¡Formulario completado!</h2><p style="color:#8a8fa8;font-size:13px">Se abrió su aplicación de correo con las respuestas pre-llenadas.</p>';}},400);
+  };
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ===================== FILL LOGIC (panel interno) =====================
+function renderFill(d){
+  surveyData=d;fillAnswers={};fillMultiSel={};
+  const c=document.getElementById('fillContent');
+  const expired=isExpiredCheck(d);
+  c.innerHTML=buildFormHTML(d,true,expired);
+  document.getElementById('successBox').style.display='none';
+  c.style.display='';
+}
+
+function isExpiredCheck(d){
+  if(!d.validity||d.validity===0)return false;
+  const created=new Date(d.createdAt||Date.now());
+  const expires=new Date(created.getTime()+d.validity*24*60*60*1000);
+  return new Date()>expires;
+}
+
+function buildFormHTML(d,fillMode,expired){
+  const exp=expired||false;
+  const valid=d.validity===0?'Permanente':(d.validity||3)+' día'+(d.validity>1?'s':'');
+  let html=`<div class="survey-header"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4)">📋 ProyectoForm</div><div class="validity-badge ${exp?'expired':d.validity===0?'permanent':'ok'}">${exp?'⛔ Vencido':'⏰ Vigencia: '+valid}</div></div><h2 class="survey-header h2">${esc(d.title)}</h2><p>${esc(d.desc||'Complete este formulario.')}</p></div><div class="survey-sender-bar">📤 Enviado por: <strong>${esc(d.sender.name)}</strong>${d.sender.role?' · '+esc(d.sender.role):''}</div>`;
+  if(d.recipient&&(d.recipient.name||d.recipient.greeting)){html+=`<div style="background:linear-gradient(135deg,#e8f4fd,#f0f7ff);border:1.5px solid #b0d4f0;border-radius:8px;padding:20px;margin-bottom:16px">${d.recipient.name?`<div style="font-size:15px;font-weight:800;margin-bottom:6px">Estimado/a: ${esc(d.recipient.name)}</div>`:''}${d.recipient.greeting?`<p style="font-size:13px;line-height:1.6">${esc(d.recipient.greeting).replace(/\n/g,'<br>')}</p>`:''}</div>`;}
+  if(exp)html+=`<div class="expired-banner"><div class="expired-icon">⏰</div><div class="expired-text"><strong>Formulario vencido</strong><p>El período ha finalizado.</p></div></div>`;
+  if(fillMode&&!exp)html+=`<div class="prog-wrap"><div class="prog-fill" id="pf" style="width:0%"></div></div>`;
+  d.questions.forEach((q,i)=>{
+    const dis=exp?'disabled style="opacity:.6;pointer-events:none"':'';
+    html+=`<div class="fill-q" id="fq${i}"><div class="fill-q-label"><div class="fill-q-num">${i+1}</div><span>${esc(q.text||'Pregunta '+(i+1))}<span style="color:#dc2626;margin-left:3px">*</span></span></div>`;
+    if(q.type==='single'||q.type==='image'){html+=q.options.map((o,oi)=>`<div class="fill-option" ${dis} ${fillMode&&!exp?`onclick="pick(this,${i},${oi},'s')"`:''}><div class="fill-bullet"></div><span>${esc(o)}</span></div>`).join('');}
+    else if(q.type==='multi'){html+=q.options.map((o,oi)=>`<div class="fill-option" ${dis} ${fillMode&&!exp?`onclick="pick(this,${i},${oi},'m')"`:''}><div class="fill-bullet check"></div><span>${esc(o)}</span></div>`).join('');}
+    else if(q.type==='dropdown'){html+=`<select class="fill-select" ${exp?'disabled':''} ${fillMode&&!exp?`onchange="fillAnswers[${i}]=this.options[this.selectedIndex].text;upd(${d.questions.length})"`:''}><option value="">— Seleccione —</option>${q.options.map((o,oi)=>`<option value="${oi}">${esc(o)}</option>`).join('')}</select>`;}
+    else if(q.type==='text'){html+=`<textarea class="fill-select" ${exp?'readonly':''} style="min-height:80px" placeholder="Escriba su respuesta..." ${fillMode&&!exp?`oninput="fillAnswers[${i}]=this.value;upd(${d.questions.length})"`:''}></textarea>`;}
+    else if(q.type==='scale'){html+=`<div class="scale-row">${[1,2,3,4,5].map(n=>`<div class="scale-opt" ${dis} ${fillMode&&!exp?`onclick="pickScale(this,${i},${n})"`:''}><strong>${n}</strong><span>${['','Muy malo','Malo','Regular','Bueno','Excelente'][n]}</span></div>`).join('')}</div>`;}
+    if(q.images&&q.images.length>0){html+=`<div class="acc"><div class="acc-h" onclick="tAcc(this)">🖼 Ver imágenes <span>▼</span></div><div class="acc-body"><div class="img-gallery">${q.images.map(img=>`<img src="${img}">`).join('')}</div></div></div>`;}
+    if(q.detail){html+=`<div class="acc" style="margin-top:8px"><div class="acc-h" onclick="tAcc(this)">📋 Ver información técnica <span>▼</span></div><div class="acc-body">${esc(q.detail).replace(/\n/g,'<br>')}</div></div>`;}
+    html+=`</div>`;
+  });
+  html+=`<div class="comment-box"><label>Comentarios adicionales</label><textarea id="extraComments" class="fill-select" style="min-height:80px" placeholder="Especificaciones..." ${exp?'readonly':''}></textarea><label style="margin-top:12px">Preferencias</label><textarea id="extraRecc" class="fill-select" style="min-height:60px" placeholder="Marca preferida..." ${exp?'readonly':''}></textarea></div>`;
+  if(fillMode&&!exp){html+=`<div style="background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1.5px solid #86efac;border-radius:8px;padding:20px;margin-top:20px;text-align:center"><div style="font-size:28px;margin-bottom:8px">🙏</div><div style="font-size:15px;font-weight:800;color:#15803d;margin-bottom:6px">¡Gracias por su colaboración!</div></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;padding-bottom:40px" class="no-print"><button class="btn btn-green" style="width:100%;justify-content:center;padding:15px;font-size:15px" onclick="submitForm()">📲 Enviar por WhatsApp</button><button class="btn btn-primary" style="width:100%;justify-content:center;padding:15px;font-size:15px" onclick="submitFormEmail()">✉️ Enviar por Correo</button></div>`;}
+  return html;
+}
+
+function pick(el,qi,oi,type){
+  const fq=el.closest('.fill-q');
+  if(type==='s'){fq.querySelectorAll('.fill-option').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');fillAnswers[qi]=surveyData.questions[qi].options[oi];}
+  else{el.classList.toggle('selected');if(!fillMultiSel[qi])fillMultiSel[qi]={};if(el.classList.contains('selected'))fillMultiSel[qi][oi]=surveyData.questions[qi].options[oi];else delete fillMultiSel[qi][oi];fillAnswers[qi]=Object.values(fillMultiSel[qi]).join(', ');}
+  upd(surveyData.questions.length);
+}
+function pickScale(el,qi,val){el.closest('.scale-row').querySelectorAll('.scale-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');fillAnswers[qi]=val+' — '+['','Muy malo','Malo','Regular','Bueno','Excelente'][val];upd(surveyData.questions.length);}
+function upd(total){const n=Object.keys(fillAnswers).filter(k=>fillAnswers[k]&&fillAnswers[k]!=='').length;const pf=document.getElementById('pf');if(pf)pf.style.width=Math.min(100,Math.round(n/total*100))+'%';}
+function tAcc(h){const b=h.nextElementSibling;b.classList.toggle('open');const arr=h.querySelector('span:last-child');if(arr)arr.textContent=b.classList.contains('open')?'▲':'▼';}
+function validate(){let ok=true;surveyData.questions.forEach((_,i)=>{const fq=document.getElementById('fq'+i);if(!fillAnswers[i]||fillAnswers[i]===''){if(fq){fq.style.border='1.5px solid #dc2626';fq.style.boxShadow='0 0 0 3px #fee2e2';}ok=false;}else{if(fq){fq.style.border='1px solid var(--border)';fq.style.boxShadow='var(--shadow)';}}});if(!ok)alert('⚠️ Responda todas las preguntas en rojo.');return ok;}
+function buildSummary(){const NL='\n';const sep='----------------------------------------';const fecha=new Date().toLocaleString('es-CO');let t='📋 *'+surveyData.title+'*'+NL+'📅 '+fecha+NL+sep+NL;surveyData.questions.forEach((q,i)=>{t+=NL+'*'+(i+1)+'. '+(q.text||'Pregunta '+(i+1))+'*'+NL+'▸ '+(fillAnswers[i]||'Sin respuesta')+NL;});const cm=document.getElementById('extraComments')?.value?.trim()||'';const rc=document.getElementById('extraRecc')?.value?.trim()||'';if(cm||rc){t+=NL+sep+NL+'💬 Comentarios'+NL;if(cm)t+='📝 '+cm+NL;if(rc)t+='⭐ Preferencias: '+rc+NL;}t+=NL+sep+NL+'_ProyectoForm_';return t;}
+function submitForm(){if(!validate())return;const phone=(surveyData.sender.phone||'').replace(/[^0-9]/g,'');if(!phone){alert('El remitente no registró WhatsApp.');return;}window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(buildSummary()),'_blank');document.getElementById('fillContent').style.display='none';const sb=document.getElementById('successBox');sb.style.display='block';sb.innerHTML='<div class="ico">🎉</div><h2>¡Enviado!</h2><p>WhatsApp se abrió con sus respuestas.</p>';window.scrollTo({top:0,behavior:'smooth'});}
+function submitFormEmail(){if(!validate())return;const email=surveyData.sender.email||'';if(!email){alert('Sin correo registrado.');return;}window.location.href='mailto:'+email+'?subject='+encodeURIComponent('Respuestas: '+surveyData.title)+'&body='+encodeURIComponent(buildSummary());setTimeout(()=>{document.getElementById('fillContent').style.display='none';document.getElementById('successBox').style.display='block';},400);}
+</script>
+</body>
+</html>
